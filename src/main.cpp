@@ -13,6 +13,8 @@ const int AUTOMATIC_SPEED = 127;
 /*MODE*/
 bool is_auto_mode = false;
 
+const int DEBOUNCE_DELAY = 50;
+
 /*pwm dir channel*/
 Motor RightMotor(26, 21, 5);
 Motor LeftMotor(27, 22, 6);
@@ -39,7 +41,6 @@ const int SW_SIDE2_PIN = 25;
 
 /* MOTOR FUNCTION */
 void runForwardOrBackward(int speed);
-
 
 void setup() {
   Serial.begin(115200);
@@ -70,22 +71,36 @@ void loop() {
 
   if (!PS4.isConnected()) {
     Serial.printf("PS4 controller disconnected.\n");
-    RightMotor.run(0,0);
-    LeftMotor.run(0,0);
-    WindingMotor.run(0,0);
+    RightMotor.run(0, 0);
+    LeftMotor.run(0, 0);
+    WindingMotor.run(0, 0);
     return;
   }
 
+  /*丸ボタン*/
+  static bool circle_pressed = false;
+  static unsigned long circle_debounce_time = 0;
+  /*三角ボタン*/
+  static unsigned long triangle_debounce_time = 0;
+  /*バツボタン*/
+  static unsigned long cross_debounce_time = 0;
+
   /* SWITCH BETWEEN MANUAL AND AUTOMATIC */
-  if (PS4.Circle()) {
-    is_auto_mode = !is_auto_mode;
-    Serial.printf("State : %d\n ", is_auto_mode);
-    delay(500);
+  if (PS4.Circle()) { // 丸ボタンを押したとき
+    if (!circle_pressed &&
+        (millis() - circle_debounce_time >
+         DEBOUNCE_DELAY)) { // circle_pressがfalseかつ前回ボタンを押してから50ms以上経過
+      is_auto_mode = !is_auto_mode;
+      circle_debounce_time = millis();
+    }
+    circle_pressed = true;
+  } else {
+    circle_pressed = false;
   }
 
   /* AUTOMATICALLY MOVE FORWARD */
   if (is_auto_mode) {
-    runForwardOrBackward(AUTOMATIC_SPEED); //まっすぐ進む
+    runForwardOrBackward(AUTOMATIC_SPEED); // まっすぐ進む
     int sw1 = digitalRead(SW_CENTER_PIN);
     int sw2 = digitalRead(SW_SIDE1_PIN);
     int sw3 = digitalRead(SW_SIDE2_PIN);
@@ -97,38 +112,41 @@ void loop() {
     if (sw1 == HIGH || sw2 == HIGH || sw3 == HIGH) {
       Serial.printf("LIMIT SWITCH PRESSED.\n");
       is_auto_mode = false;
-      RightMotor.run(0,0);
-      LeftMotor.run(0,0);
-      delay(250);
+      RightMotor.run(0, 0);
+      LeftMotor.run(0, 0);
     }
   } else {
     if (DEAD_ZONE <= abs(PS4.RStickY())) {
       RightMotor.run(abs(PS4.RStickY()),
                      (PS4.RStickY() > 0 ? 1 : 0)); // 右モーターを動かす
-    }else{
-      RightMotor.run(0,0);
+    } else {
+      RightMotor.run(0, 0);
     }
     if (DEAD_ZONE <= abs(PS4.LStickY())) {
       LeftMotor.run(abs(PS4.LStickY()),
                     (PS4.LStickY() > 0 ? 0 : 1)); // 左モーターを動かす
-    }else{
-      LeftMotor.run(0,0);
+    } else {
+      LeftMotor.run(0, 0);
     }
   }
 
   /* MOVE SERVO */
   if (PS4.Triangle() && servo1_degree < 170) {
-    servo1_degree += 5;
-    servo2_degree -= 5;
-    ContinuousServo1.write(servo1_degree); // 上げる
-    ContinuousServo2.write(servo2_degree);
-    delay(25);
+    if (millis() - triangle_debounce_time > 50) {
+      servo1_degree += 5;
+      servo2_degree -= 5;
+      ContinuousServo1.write(servo1_degree); // 上げる
+      ContinuousServo2.write(servo2_degree);
+    }
+    triangle_debounce_time = millis();
   } else if (PS4.Cross() && servo1_degree > 5) {
-    servo1_degree -= 5;
-    servo2_degree += 5;
-    ContinuousServo1.write(servo1_degree); // 下げる
-    ContinuousServo2.write(servo2_degree);
-    delay(25);
+    if (millis() - cross_debounce_time > DEBOUNCE_DELAY) {
+      servo1_degree -= 5;
+      servo2_degree += 5;
+      ContinuousServo1.write(servo1_degree); // 下げる
+      ContinuousServo2.write(servo2_degree);
+    }
+    cross_debounce_time = millis();
   }
 
   if (PS4.R2Value() > 10) {
@@ -138,14 +156,12 @@ void loop() {
   } else {
     WindingMotor.run(0, 0);
   }
-  //TODO 要調整!!
+  // TODO 要調整!!
   if (PS4.Right()) {
     TakeServo.write(60);
-    delay(25);
   }
   if (PS4.Left()) {
     TakeServo.write(90);
-    delay(25);
   }
 
   if (PS4.PSButton()) {
@@ -165,4 +181,3 @@ void runForwardOrBackward(int speed) {
     Serial.printf("RUN BACKWARD\n");
   }
 }
-
