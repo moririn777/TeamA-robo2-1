@@ -100,7 +100,9 @@ void loop() {
 
   /* AUTOMATICALLY MOVE FORWARD */
   if (is_auto_mode) {
-    runForwardOrBackward(AUTOMATIC_SPEED); // まっすぐ進む
+    RightMotor.run(AUTOMATIC_SPEED, 1);
+    LeftMotor.run(AUTOMATIC_SPEED, 0);
+
     int sw1 = digitalRead(SW_CENTER_PIN);
     int sw2 = digitalRead(SW_SIDE1_PIN);
     int sw3 = digitalRead(SW_SIDE2_PIN);
@@ -167,17 +169,3 @@ void loop() {
   if (PS4.PSButton()) {
     ESP.restart(); // ESP32の再起動
   }
-}
-
-/* MOVE FORWARD AND BACKWARD */
-void runForwardOrBackward(int speed) {
-  if (speed > 0) {
-    RightMotor.run(speed, 1);
-    LeftMotor.run(speed, 0);
-    Serial.printf("RUN FORWARD\n");
-  } else {
-    RightMotor.run(speed, 0);
-    LeftMotor.run(speed, 1);
-    Serial.printf("RUN BACKWARD\n");
-  }
-}
