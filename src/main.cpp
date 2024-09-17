@@ -11,17 +11,17 @@ const int DEAD_ZONE = 30;
 const int AUTOMATIC_SPEED = 127;
 
 /*MODE*/
-bool isAutoMode = false;
+bool is_auto_mode = false;
 
 /*pwm dir channel*/
-Motor rightMotor(26, 21, 5);
-Motor leftMotor(27, 22, 6);
-Motor windingMotor(13, 23, 7);
+Motor RightMotor(26, 21, 5);
+Motor LeftMotor(27, 22, 6);
+Motor WindingMotor(13, 23, 7);
 
 /* SERVO */
-Servo continuousServo1;
-Servo continuousServo2;
-Servo takeServo;
+Servo ContinuousServo1;
+Servo ContinuousServo2;
+Servo TakeServo;
 
 const int SERVO1_PIN = 18;
 const int SERVO2_PIN = 4;
@@ -39,7 +39,7 @@ const int SW_SIDE2_PIN = 25;
 
 /* MOTOR FUNCTION */
 void runForwardOrBackward(int speed);
-void stopMotor();
+
 
 void setup() {
   Serial.begin(115200);
@@ -53,13 +53,13 @@ void setup() {
   PS4.begin("08:D1:F9:37:36:FE");
   Serial.printf("ready.\n");
 
-  continuousServo1.attach(SERVO1_PIN, 800, 2200);
-  continuousServo2.attach(SERVO2_PIN, 800, 2200);
-  takeServo.attach(SERVO3_PIN, 500, 2400);
+  ContinuousServo1.attach(SERVO1_PIN, 800, 2200);
+  ContinuousServo2.attach(SERVO2_PIN, 800, 2200);
+  TakeServo.attach(SERVO3_PIN, 500, 2400);
 
-  continuousServo1.write(servo1_degree);
-  continuousServo2.write(servo2_degree);
-  takeServo.write(20);
+  ContinuousServo1.write(servo1_degree);
+  ContinuousServo2.write(servo2_degree);
+  TakeServo.write(20);
 
   pinMode(SW_CENTER_PIN, INPUT_PULLDOWN);
   pinMode(SW_SIDE1_PIN, INPUT_PULLDOWN);
@@ -70,19 +70,21 @@ void loop() {
 
   if (!PS4.isConnected()) {
     Serial.printf("PS4 controller disconnected.\n");
-    stopMotor();
+    RightMotor.run(0,0);
+    LeftMotor.run(0,0);
+    WindingMotor.run(0,0);
     return;
   }
 
   /* SWITCH BETWEEN MANUAL AND AUTOMATIC */
   if (PS4.Circle()) {
-    isAutoMode = !isAutoMode;
-    Serial.printf("State : %d\n ", isAutoMode);
+    is_auto_mode = !is_auto_mode;
+    Serial.printf("State : %d\n ", is_auto_mode);
     delay(500);
   }
 
   /* AUTOMATICALLY MOVE FORWARD */
-  if (isAutoMode) {
+  if (is_auto_mode) {
     runForwardOrBackward(AUTOMATIC_SPEED); //まっすぐ進む
     int sw1 = digitalRead(SW_CENTER_PIN);
     int sw2 = digitalRead(SW_SIDE1_PIN);
@@ -94,21 +96,23 @@ void loop() {
 
     if (sw1 == HIGH || sw2 == HIGH || sw3 == HIGH) {
       Serial.printf("LIMIT SWITCH PRESSED.\n");
-      isAutoMode = false;
-      stopMotor();
+      is_auto_mode = false;
+      RightMotor.run(0,0);
+      LeftMotor.run(0,0);
       delay(250);
     }
   } else {
     if (DEAD_ZONE <= abs(PS4.RStickY())) {
-      rightMotor.run(abs(PS4.RStickY()),
+      RightMotor.run(abs(PS4.RStickY()),
                      (PS4.RStickY() > 0 ? 1 : 0)); // 右モーターを動かす
+    }else{
+      RightMotor.run(0,0);
     }
     if (DEAD_ZONE <= abs(PS4.LStickY())) {
-      leftMotor.run(abs(PS4.LStickY()),
+      LeftMotor.run(abs(PS4.LStickY()),
                     (PS4.LStickY() > 0 ? 0 : 1)); // 左モーターを動かす
-    }
-    if (DEAD_ZONE > abs(PS4.LStickY()) && DEAD_ZONE > abs(PS4.RStickY())) {
-      stopMotor();
+    }else{
+      LeftMotor.run(0,0);
     }
   }
 
@@ -116,31 +120,31 @@ void loop() {
   if (PS4.Triangle() && servo1_degree < 170) {
     servo1_degree += 5;
     servo2_degree -= 5;
-    continuousServo1.write(servo1_degree); // 上げる
-    continuousServo2.write(servo2_degree);
+    ContinuousServo1.write(servo1_degree); // 上げる
+    ContinuousServo2.write(servo2_degree);
     delay(25);
   } else if (PS4.Cross() && servo1_degree > 5) {
     servo1_degree -= 5;
     servo2_degree += 5;
-    continuousServo1.write(servo1_degree); // 下げる
-    continuousServo2.write(servo2_degree);
+    ContinuousServo1.write(servo1_degree); // 下げる
+    ContinuousServo2.write(servo2_degree);
     delay(25);
   }
 
   if (PS4.R2Value() > 10) {
-    windingMotor.run(PS4.R2Value() / 2, 0); // 正転
+    WindingMotor.run(PS4.R2Value() / 2, 0); // 正転
   } else if (PS4.L2Value() > 10) {
-    windingMotor.run(PS4.L2Value() / 2, 1); // 逆転
+    WindingMotor.run(PS4.L2Value() / 2, 1); // 逆転
   } else {
-    windingMotor.run(0, 0);
+    WindingMotor.run(0, 0);
   }
   //TODO 要調整!!
   if (PS4.Right()) {
-    takeServo.write(60);
+    TakeServo.write(60);
     delay(25);
   }
   if (PS4.Left()) {
-    takeServo.write(90);
+    TakeServo.write(90);
     delay(25);
   }
 
@@ -152,18 +156,13 @@ void loop() {
 /* MOVE FORWARD AND BACKWARD */
 void runForwardOrBackward(int speed) {
   if (speed > 0) {
-    rightMotor.run(speed, 1);
-    leftMotor.run(speed, 0);
+    RightMotor.run(speed, 1);
+    LeftMotor.run(speed, 0);
     Serial.printf("RUN FORWARD\n");
   } else {
-    rightMotor.run(speed, 0);
-    leftMotor.run(speed, 1);
+    RightMotor.run(speed, 0);
+    LeftMotor.run(speed, 1);
     Serial.printf("RUN BACKWARD\n");
   }
 }
 
-/* STOP MOVING */
-void stopMotor() {
-  rightMotor.run(0, 0);
-  leftMotor.run(0, 0);
-}
