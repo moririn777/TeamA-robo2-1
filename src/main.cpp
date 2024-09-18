@@ -117,19 +117,19 @@ void loop() {
       RightMotor.run(0, 0);
       LeftMotor.run(0, 0);
     }
+    return;
+  }
+  if (DEAD_ZONE <= abs(PS4.RStickY())) {
+    RightMotor.run(abs(PS4.RStickY()),
+                   (PS4.RStickY() > 0 ? 1 : 0)); // 右モーターを動かす
   } else {
-    if (DEAD_ZONE <= abs(PS4.RStickY())) {
-      RightMotor.run(abs(PS4.RStickY()),
-                     (PS4.RStickY() > 0 ? 1 : 0)); // 右モーターを動かす
-    } else {
-      RightMotor.run(0, 0);
-    }
-    if (DEAD_ZONE <= abs(PS4.LStickY())) {
-      LeftMotor.run(abs(PS4.LStickY()),
-                    (PS4.LStickY() > 0 ? 0 : 1)); // 左モーターを動かす
-    } else {
-      LeftMotor.run(0, 0);
-    }
+    RightMotor.run(0, 0);
+  }
+  if (DEAD_ZONE <= abs(PS4.LStickY())) {
+    LeftMotor.run(abs(PS4.LStickY()),
+                  (PS4.LStickY() > 0 ? 0 : 1)); // 左モーターを動かす
+  } else {
+    LeftMotor.run(0, 0);
   }
 
   /* MOVE SERVO */
@@ -169,3 +169,4 @@ void loop() {
   if (PS4.PSButton()) {
     ESP.restart(); // ESP32の再起動
   }
+}
