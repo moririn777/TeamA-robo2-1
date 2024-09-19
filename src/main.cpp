@@ -10,9 +10,6 @@ const int DEAD_ZONE = 30;
 /* MOTOR */
 const int AUTOMATIC_SPEED = 127;
 
-/*MODE*/
-bool is_auto_mode = false;
-
 const int DEBOUNCE_DELAY = 50;
 
 /*pwm dir channel*/
