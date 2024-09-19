@@ -34,14 +34,6 @@ int servo2_degree = 0;
 
 int takeServo_degree;
 
-/* LIMIT SWITCH */
-const int SW_CENTER_PIN = 33;
-const int SW_SIDE1_PIN = 32;
-const int SW_SIDE2_PIN = 25;
-
-/* MOTOR FUNCTION */
-void runForwardOrBackward(int speed);
-
 /*丸ボタン*/
 bool circle_pressed = false;
 uint32_t circle_debounce_time = 0;
@@ -69,10 +61,6 @@ void setup() {
   ContinuousServo1.write(servo1_degree);
   ContinuousServo2.write(servo2_degree);
   TakeServo.write(20);
-
-  pinMode(SW_CENTER_PIN, INPUT_PULLDOWN);
-  pinMode(SW_SIDE1_PIN, INPUT_PULLDOWN);
-  pinMode(SW_SIDE2_PIN, INPUT_PULLDOWN);
 }
 
 void loop() {
@@ -85,41 +73,6 @@ void loop() {
     return;
   }
 
-
-  /* SWITCH BETWEEN MANUAL AND AUTOMATIC */
-  if (PS4.Circle()) { // 丸ボタンを押したとき
-    if (!circle_pressed &&
-        (millis() - circle_debounce_time >
-         DEBOUNCE_DELAY)) { // circle_pressがfalseかつ前回ボタンを押してから50ms以上経過
-      //is_auto_mode = !is_auto_mode;
-      circle_debounce_time = millis();
-    }
-    circle_pressed = true;
-  } else {
-    circle_pressed = false;
-  }
-
-  /* AUTOMATICALLY MOVE FORWARD */
-  if (is_auto_mode) {
-    RightMotor.run(AUTOMATIC_SPEED, 1);
-    LeftMotor.run(AUTOMATIC_SPEED, 0);
-
-    int sw1 = digitalRead(SW_CENTER_PIN);
-    int sw2 = digitalRead(SW_SIDE1_PIN);
-    int sw3 = digitalRead(SW_SIDE2_PIN);
-
-    Serial.printf("SWITCH1 STATE : %d \r\n ", sw1);
-    Serial.printf("SWITCH2 STATE : %d \r\n ", sw2);
-    Serial.printf("SWITCH3 STATE : %d \r\n ", sw3);
-
-    if (sw1 == HIGH || sw2 == HIGH || sw3 == HIGH) {
-      Serial.printf("LIMIT SWITCH PRESSED.\n");
-      is_auto_mode = false;
-      RightMotor.run(0, 0);
-      LeftMotor.run(0, 0);
-    }
-    return;
-  }
   if (DEAD_ZONE <= abs(PS4.RStickY())) {
     RightMotor.run(abs(PS4.RStickY()),
                    (PS4.RStickY() > 0 ? 1 : 0)); // 右モーターを動かす
@@ -159,7 +112,7 @@ void loop() {
   } else {
     WindingMotor.run(0, 0);
   }
-  
+
   if (PS4.Right()) {
     TakeServo.write(0);
   }
