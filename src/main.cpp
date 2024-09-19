@@ -90,7 +90,7 @@ void loop() {
     if (!circle_pressed &&
         (millis() - circle_debounce_time >
          DEBOUNCE_DELAY)) { // circle_pressがfalseかつ前回ボタンを押してから50ms以上経過
-      is_auto_mode = !is_auto_mode;
+      //is_auto_mode = !is_auto_mode;
       circle_debounce_time = millis();
     }
     circle_pressed = true;
@@ -133,8 +133,8 @@ void loop() {
   }
 
   /* MOVE SERVO */
-  if (PS4.Triangle() && servo1_degree < 170) {
-    if (millis() - triangle_debounce_time > 50) {
+  if (PS4.Triangle() && servo1_degree < 240) {
+    if (millis() - triangle_debounce_time > DEBOUNCE_DELAY) {
       servo1_degree += 5;
       servo2_degree -= 5;
       ContinuousServo1.write(servo1_degree); // 上げる
@@ -160,12 +160,13 @@ void loop() {
   }
   // TODO 要調整!!
   if (PS4.Right()) {
-    TakeServo.write(60);
+    TakeServo.write(0);
   }
   if (PS4.Left()) {
-    TakeServo.write(90);
+    TakeServo.write(60);
   }
 
   if (PS4.PSButton()) {
     ESP.restart(); // ESP32の再起動
   }
+}
