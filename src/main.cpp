@@ -42,6 +42,14 @@ const int SW_SIDE2_PIN = 25;
 /* MOTOR FUNCTION */
 void runForwardOrBackward(int speed);
 
+/*丸ボタン*/
+bool circle_pressed = false;
+uint32_t circle_debounce_time = 0;
+/*三角ボタン*/
+uint32_t triangle_debounce_time = 0;
+/*バツボタン*/
+uint32_t cross_debounce_time = 0;
+
 void setup() {
   Serial.begin(115200);
 
@@ -77,13 +85,6 @@ void loop() {
     return;
   }
 
-  /*丸ボタン*/
-  static bool circle_pressed = false;
-  static unsigned long circle_debounce_time = 0;
-  /*三角ボタン*/
-  static unsigned long triangle_debounce_time = 0;
-  /*バツボタン*/
-  static unsigned long cross_debounce_time = 0;
 
   /* SWITCH BETWEEN MANUAL AND AUTOMATIC */
   if (PS4.Circle()) { // 丸ボタンを押したとき
