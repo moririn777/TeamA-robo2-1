@@ -158,7 +158,7 @@ void loop() {
   } else {
     WindingMotor.run(0, 0);
   }
-  // TODO 要調整!!
+  
   if (PS4.Right()) {
     TakeServo.write(0);
   }
