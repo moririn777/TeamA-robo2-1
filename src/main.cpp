@@ -31,6 +31,9 @@ int servo2_degree = 0;
 
 int takeServo_degree;
 
+uint8_t right_pwm = 0;
+uint8_t left_pwm = 0;
+
 /*丸ボタン*/
 bool circle_pressed = false;
 uint32_t circle_debounce_time = 0;
@@ -71,13 +74,21 @@ void loop() {
   }
 
   if (DEAD_ZONE <= abs(PS4.RStickY())) {
-    RightMotor.run(abs(PS4.RStickY()),
+    right_pwm = abs(PS4.RStickY());
+    if (PS4.R1()) {
+      right_pwm /= 2; // R1を押しているときPWMが半分になる
+    }
+    RightMotor.run(right_pwm,
                    (PS4.RStickY() > 0 ? 1 : 0)); // 右モーターを動かす
   } else {
     RightMotor.run(0, 0);
   }
   if (DEAD_ZONE <= abs(PS4.LStickY())) {
-    LeftMotor.run(abs(PS4.LStickY()),
+    left_pwm = abs(PS4.LStickY());
+    if (PS4.R1()) {
+      left_pwm /= 2;
+    }
+    LeftMotor.run(left_pwm,
                   (PS4.LStickY() > 0 ? 0 : 1)); // 左モーターを動かす
   } else {
     LeftMotor.run(0, 0);
