@@ -8,10 +8,6 @@
 const int DEAD_ZONE = 30;
 
 /* MOTOR */
-const int AUTOMATIC_SPEED = 127;
-
-const int DEBOUNCE_DELAY = 50;
-
 /*pwm dir channel*/
 Motor RightMotor(26, 21, 5);
 Motor LeftMotor(27, 22, 6);
@@ -28,12 +24,12 @@ const int SERVO3_PIN = 19;
 
 int servo1_degree = 180; // 初期位置
 int servo2_degree = 0;
-
-int takeServo_degree;
+int takeServo_degree = 20;
 
 uint8_t right_pwm = 0;
 uint8_t left_pwm = 0;
 
+const int DEBOUNCE_DELAY = 50;
 /*丸ボタン*/
 bool circle_pressed = false;
 uint32_t circle_debounce_time = 0;
@@ -60,7 +56,7 @@ void setup() {
 
   ContinuousServo1.write(servo1_degree);
   ContinuousServo2.write(servo2_degree);
-  TakeServo.write(20);
+  TakeServo.write(takeServo_degree);
 }
 
 void loop() {
@@ -95,7 +91,7 @@ void loop() {
   }
 
   /* MOVE SERVO */
-  if (PS4.Triangle() && servo1_degree < 240) {
+  if (PS4.Triangle() && servo1_degree < 175) {
     if (millis() - triangle_debounce_time > DEBOUNCE_DELAY) {
       servo1_degree += 5;
       servo2_degree -= 5;
