@@ -29,7 +29,7 @@ int takeServo_degree = 20;
 uint8_t right_pwm = 0;
 uint8_t left_pwm = 0;
 
-const int DEBOUNCE_DELAY = 50;
+const int DEBOUNCE_DELAY = 100;
 /*丸ボタン*/
 bool circle_pressed = false;
 uint32_t circle_debounce_time = 0;
