@@ -29,7 +29,7 @@ int takeServo_degree = 20;
 uint8_t right_pwm = 0;
 uint8_t left_pwm = 0;
 
-const int DEBOUNCE_DELAY = 50;
+const int DEBOUNCE_DELAY = 100;
 /*丸ボタン*/
 bool circle_pressed = false;
 uint32_t circle_debounce_time = 0;
@@ -93,20 +93,21 @@ void loop() {
   /* MOVE SERVO */
   if (PS4.Triangle() && servo1_degree < 175) {
     if (millis() - triangle_debounce_time > DEBOUNCE_DELAY) {
+      triangle_debounce_time = millis();
       servo1_degree += 5;
       servo2_degree -= 5;
       ContinuousServo1.write(servo1_degree); // 上げる
       ContinuousServo2.write(servo2_degree);
     }
-    triangle_debounce_time = millis();
+    
   } else if (PS4.Cross() && servo1_degree > 5) {
     if (millis() - cross_debounce_time > DEBOUNCE_DELAY) {
+      cross_debounce_time = millis();
       servo1_degree -= 5;
       servo2_degree += 5;
       ContinuousServo1.write(servo1_degree); // 下げる
       ContinuousServo2.write(servo2_degree);
     }
-    cross_debounce_time = millis();
   }
 
   if (PS4.R2Value() > 10) {
